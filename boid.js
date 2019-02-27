@@ -5,8 +5,8 @@
 
 class Boid{
     constructor() {
-        // this.color = createVector(random(255), random(255), random(255));
-        this.color = createVector(220,220,220);
+        this.color = createVector(random(255), random(255), random(255));
+        // this.color = createVector(220,220,220);
         this.position = createVector(random(width), random(height));
         this.velocity = createVector(random(-6,6), random(-6,6));
         this.accleration = createVector(0.0, 0.0);
@@ -51,15 +51,15 @@ class Boid{
             this.position.y = height + this.position.y;
         }
 
-        // this.color.add(this.dColor);
+        this.color.add(this.dColor);
     }
 
-    alignment (flock){
+    alignment (quadtree){
         let count = 0 ;
         let average = createVector();
-        let vesion_radius = 30;
-
-        for(let other of flock){
+        let vesion_radius = 50;
+        let vesion_array = quadtree.queryRange(new Rectangle(this.position.x, this.position.y, vesion_radius, vesion_radius));
+        for(let other of vesion_array){
             let distance = dist(this.position.x , this.position.y , other.position.x , other.position.y );
             if(distance < vesion_radius && other != this){
                 average.add(other.velocity);
@@ -74,12 +74,12 @@ class Boid{
         return average;
     }
 
-    cohesion(flock){
+    cohesion(quadtree){
         let count = 0 ;
         let average = createVector();
-        let vesion_radius = 40;
-
-        for(let other of flock){
+        let vesion_radius = 30;
+        let vesion_array = quadtree.queryRange(new Rectangle(this.position.x, this.position.y, vesion_radius, vesion_radius));
+        for(let other of vesion_array){
             let distance = dist(this.position.x , this.position.y , other.position.x , other.position.y );
             if(distance < vesion_radius && other != this){
                 average.add(other.position);
@@ -95,12 +95,12 @@ class Boid{
         return average;
     }
 
-    seperation (flock) {
+    seperation (quadtree) {
         let count = 0 ;
         let average  = createVector();
         let vesion_radius = 20;
-
-        for(let other of flock){
+        let vesion_array = quadtree.queryRange(new Rectangle(this.position.x, this.position.y, vesion_radius, vesion_radius));
+        for(let other of vesion_array){
             let distance = dist(this.position.x , this.position.y , other.position.x , other.position.y );
             if(distance < vesion_radius && other != this){
                 let diff_vector = p5.Vector.sub(this.position, other.position);
@@ -109,23 +109,20 @@ class Boid{
                 count += 1;
             }
         }
-
         if(count){
             average.div(count);
             average.sub(this.velocity);
         }
-
         return average;
     }
 
-    flockColor(boids){
+    flockColor(quadtree){
         let count = 0 ;
         let average  = createVector();
         let vesion_radius = 30;
-
-        for(let other of flock){
+        let vesion_array = quadtree.queryRange(new Rectangle(this.position.x, this.position.y, vesion_radius, vesion_radius));
+        for(let other of vesion_array){
             let distance = dist(this.position.x , this.position.y , other.position.x , other.position.y );
-            
             if(distance < vesion_radius && other != this){
                 average.add(other.color);
                 count += 1;
@@ -139,14 +136,16 @@ class Boid{
         return average;
     }
 
-    clearView(flock){
+    clearView(quadtree){
         let average = createVector();
         let count   = 0 ;
         let heading = this.velocity.heading();
         let perception = 100;
-        let nearest  = createVector();
+        let vesion_array = quadtree.queryRange(new Rectangle(this.position.x, this.position.y, perception, perception));
+
+        // let nearest  = createVector();
         
-        for(let other of flock){
+        for(let other of vesion_array){
             let distance = dist(this.position.x , this.position.y , other.position.x , other.position.y);
             if(distance < perception && other != this){
                 let angle = p5.Vector.sub(other.position, this.position).heading();
@@ -156,7 +155,6 @@ class Boid{
                     if(this == firstBoid){
                         other.color.set(255,0,0);
                     }
-                
                 }
             }
             else if(this == firstBoid){
@@ -182,7 +180,7 @@ class Boid{
         let average_position = this.cohesion(boids);
         let average_seperation = this.seperation(boids);
         // let average_clear_force = this.clearView(boids);
-
+        // average_seperation.mult(3);
         let force = createVector();
 
         force.add(average_position);

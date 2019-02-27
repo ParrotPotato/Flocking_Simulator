@@ -1,13 +1,14 @@
 const flock = [];
 let firstBoid = null;
+let quadtree = null;
 function setup(){
-    createCanvas(500,500);
+    createCanvas(1908,1060);
     let count = 0 ;
-    for(var i = 0 ; i < 50 ; i++){
+    for(var i = 0 ; i < 300 ; i++){
             flock.push(new Boid());
     }
     firstBoid = new Boid();
-    firstBoid.color.set(0,255,0);
+    // firstBoid.color.set(0,255,0);
 }   
 
 function draw(){
@@ -20,10 +21,18 @@ function draw(){
 }
 
 function update(){
+    quadtree = new Quadtree(new Rectangle(width/2, height/2, width/2, height/2), 4);
     for(let b of flock){
-        b.update();
-        b.flock(flock);
+        quadtree.insert(b);
     }
+    quadtree.insert(firstBoid);
+    for(let b of flock){
+        b.flock(quadtree);
+        b.update();
+    }
+    firstBoid.flock(quadtree);
     firstBoid.update();
-    firstBoid.flock(flock);
+
+    // quadtree.show();
+    quadtree = null;
 }
